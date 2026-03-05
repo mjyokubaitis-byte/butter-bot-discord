@@ -11,24 +11,51 @@ const openai = new OpenAI({
 })
 
 client.once('ready', () => {
-  console.log('Butter Bot online')
+  console.log('🧈 Butter Bot online')
 })
 
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
 
   if (interaction.commandName === 'butter') {
-    const message = interaction.options.getString('message')
+    try {
+      const message = interaction.options.getString('message', true)
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: "You are Butter Bot, a sarcastic tactical logistics commander for Seal Team Rick’s." },
-        { role: "user", content: message }
-      ]
-    })
+      // Prevent Discord timeout
+      await interaction.deferReply()
 
-    await interaction.reply(completion.choices[0].message.content)
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are Butter Bot, a sarcastic tactical logistics commander for Seal Team Rick’s."
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ]
+      })
+
+      const reply =
+        completion.choices?.[0]?.message?.content ||
+        "Butter Bot experienced an existential processing error."
+
+      await interaction.editReply(reply.slice(0, 1900))
+
+    } catch (error) {
+      console.error(error)
+
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply("Butter Bot encountered an operational error.")
+      } else {
+        await interaction.reply({
+          content: "Butter Bot error. Check Railway logs.",
+          ephemeral: true
+        })
+      }
+    }
   }
 })
 
