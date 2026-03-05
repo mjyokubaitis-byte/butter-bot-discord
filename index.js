@@ -1,19 +1,35 @@
 import 'dotenv/config'
+import http from "http"
 import { Client, GatewayIntentBits } from 'discord.js'
 import OpenAI from 'openai'
 
+// Railway healthcheck server (prevents shutdown)
+const port = process.env.PORT || 3000
+http
+  .createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" })
+    res.end("Butter Bot online\n")
+  })
+  .listen(port, () => {
+    console.log(`Healthcheck server running on port ${port}`)
+  })
+
+// Discord client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 })
 
+// OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
+// Bot ready event
 client.once('ready', () => {
   console.log('🧈 Butter Bot online')
 })
 
+// Slash command handler
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
 
@@ -21,7 +37,7 @@ client.on('interactionCreate', async (interaction) => {
     try {
       const message = interaction.options.getString('message', true)
 
-      // Prevent Discord timeout
+      // prevents Discord timeout
       await interaction.deferReply()
 
       const completion = await openai.chat.completions.create({
@@ -29,7 +45,8 @@ client.on('interactionCreate', async (interaction) => {
         messages: [
           {
             role: "system",
-            content: "You are Butter Bot, a sarcastic tactical logistics commander for Seal Team Rick’s."
+            content:
+              "You are Butter Bot, a sarcastic tactical logistics commander for Seal Team Rick’s."
           },
           {
             role: "user",
@@ -48,7 +65,9 @@ client.on('interactionCreate', async (interaction) => {
       console.error(error)
 
       if (interaction.deferred || interaction.replied) {
-        await interaction.editReply("Butter Bot encountered an operational error.")
+        await interaction.editReply(
+          "Butter Bot encountered an operational error."
+        )
       } else {
         await interaction.reply({
           content: "Butter Bot error. Check Railway logs.",
@@ -59,4 +78,5 @@ client.on('interactionCreate', async (interaction) => {
   }
 })
 
+// Login to Discord
 client.login(process.env.DISCORD_TOKEN)
