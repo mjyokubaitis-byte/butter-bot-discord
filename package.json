@@ -1,6 +1,7 @@
 {
   "name": "butter-bot-discord",
   "version": "1.0.0",
+  "description": "Butter Bot for Seal Team Rick’s Discord",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -11,5 +12,8 @@
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "openai": "^4.60.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
